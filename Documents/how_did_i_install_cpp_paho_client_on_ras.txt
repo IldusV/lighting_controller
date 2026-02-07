@@ -1,0 +1,41 @@
+   how_did_i_install_cpp_paho_client_on_raspi
+   
+   
+   30  ls -l
+   31  mkdir downloads
+   32  cd downloads/
+   33  git clone https://github.com/eclipse/paho.mqtt.c.git
+   34  sudo apt install git-all
+   35  git -v
+   36  git clone https://github.com/eclipse/paho.mqtt.c.git
+   37  ll
+   38  ls -l
+   39  cd paho.mqtt.c/
+   40  ls
+   41  make
+   42  sudo make install
+   43  cd ..
+   44  git clone https://github.com/eclipse/paho.mqtt.cpp.git
+   45  ./bootstrap
+   46  cd paho.mqtt.cpp/
+   47  sudo apt-get install autoconf automake libtool make gcc -y
+   48  ./bootstrap
+   49  export PAHO_DIR=$PWD
+   50  mkdir mybuild && cd mybuild
+   51  $PAHO_DIR/configure --enable-samples
+   52  nake
+   53  make
+   54  ..
+   55  ls -l
+   56  cd ..
+   57  ls -l
+   58  make
+   59  git submodule init
+   60  git submodule update
+   61  cmake -Bbuild -H. -DPAHO_WITH_MQTT_C=ON -DPAHO_BUILD_EXAMPLES=ON
+   62  sudo cmake --build build/ --target install
+   63  sudo apt-get install build-essential gcc make cmake
+   64  $ sudo apt-get install libssl-dev
+   65  sudo apt-get install libssl-dev
+   66  exit
+   67  ls

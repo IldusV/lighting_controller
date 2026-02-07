@@ -1,0 +1,105 @@
+SSH OVER USB CONFIGURATION ON PC SIDE:
+ildusv - this is what is worked for me
+
+---------------------------------------
+PC SIDE 
+--------------------------------------
+
+🥇 Solution 1: NetworkManager + USB match (recommended)
+1️⃣ Find USB device attributes
+
+Plug Pi in, then run:
+
+nmcli -f GENERAL.DEVICE,GENERAL.TYPE,GENERAL.HWADDR,GENERAL.CONNECTION dev show
+
+
+You’ll see your USB Ethernet device.
+
+Now get its USB path:
+
+udevadm info -q path -n enxXXXX
+
+
+And attributes:
+
+udevadm info -a -n enxXXXX | grep -E 'idVendor|idProduct|manufacturer|product'
+
+
+Typical Pi gadget:
+
+ATTR{idVendor}=="0525"
+ATTR{idProduct}=="a4a2"
+ATTR{manufacturer}=="Linux"
+ATTR{product}=="RNDIS/Ethernet Gadget"
+
+2️⃣ Create a NetworkManager connection without DEVICE binding
+sudo nmcli connection add type ethernet \
+  con-name rpi-usb \
+  ifname "*" \
+  ipv4.method manual \
+  ipv4.addresses 192.168.7.1/24 \
+  ipv4.never-default yes \
+  connection.autoconnect yes
+
+
+This says:
+
+ifname "*" → any matching Ethernet device
+
+NM will auto-attach when device appears
+
+3️⃣ Restrict it to USB gadget only (important)
+
+Add USB filter:
+
+sudo nmcli connection modify rpi-usb \
+  connection.interface-name "*" \
+  ethernet.cloned-mac-address preserve
+
+
+Then bind via match rules:
+
+sudo nmcli connection modify rpi-usb \
+  match.interface-name "enx*"
+
+
+(This safely avoids Wi-Fi and real NICs.)
+
+4️⃣ Bring it up once
+sudo nmcli connection up rpi-usb
+
+
+From now on:
+
+Any enx* gadget → static 192.168.7.1
+
+Name can change → config sticks
+
+
+
+
+----------------------------------------------------
+RASPI SIDE: make IP config persistent across reboots
+----------------------------------------------------
+
+6️⃣ Make Raspberry Pi USB Ethernet permanent (correct fix)
+
+On the Raspberry Pi, create:
+
+---
+sudo nano /etc/systemd/network/20-usb0.network
+
+[Match]
+Name=usb0
+
+[Network]
+Address=192.168.7.2/24
+---
+
+Then enable networkd (if not already):
+
+sudo systemctl enable systemd-networkd --now
+sudo systemctl restart systemd-networkd
+
+
+reboot better
