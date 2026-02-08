@@ -1,0 +1,26 @@
+{
+  "name": "RP2040 Pico SDK DevContainer (Makefiles)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  "workspaceFolder": "/workspaces/lighting_controller",
+
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+
+  "extensions": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools"
+  ],
+
+  "remoteUser": "root",
+
+  "postCreateCommand": "cmake --version",
+
+  "runArgs": [
+    "--cap-add=SYS_PTRACE"
+  ]
+}
