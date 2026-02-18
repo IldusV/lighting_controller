@@ -75,7 +75,7 @@ u8x8_byte_linux_i2c(u8x8_t *u8x8,
 		idx = 0;
 		break;
 	case U8X8_MSG_BYTE_END_TRANSFER:
-		fprintf(stderr, "++ end transfer, sending cmd %0x %0x count %d\n", data[0], data[1], idx);
+		//fprintf(stderr, "++ end transfer, sending cmd %0x %0x count %d\n", data[0], data[1], idx);
 
 		if (write(file, &data[0], idx) != idx) {
 			usleep(2000);
@@ -83,7 +83,7 @@ u8x8_byte_linux_i2c(u8x8_t *u8x8,
 			return 0;
 		}
 
-		fprintf(stderr, "++ Transfer Complete, no error\n\n");
+		//fprintf(stderr, "++ Transfer Complete, no error\n\n");
         break;
 	default:
 		fprintf(stderr, "unknown msg type %d\n", msg);

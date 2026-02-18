@@ -6,14 +6,14 @@ CFLAGS = -Wall -Ilib/u8g2/csrc/. -I.
 LDFLAGS = -L/usr/local/lib -lpaho-mqttpp3 -lpaho-mqtt3as -lpigpio
 
 # Separate source files by type
-CPP_SRC = src/KeypadHandler.cpp src/main.cpp src/MqttMgr.cpp src/linux-i2c.cpp
+CPP_SRC = src/main.cpp src/MqttMgr.cpp src/linux-i2c.cpp src/I2CManager.cpp src/I2CSerialAdapter.cpp src/KeypadDriver.cpp 
 C_SRC = $(wildcard lib/u8g2/csrc/*.c)
 
 # Generate object files for both types
 OBJ = $(CPP_SRC:.cpp=.o) $(C_SRC:.c=.o)
 
 # Header files
-HEADERS = KeypadHandler.h MqttMgr.h linux-i2c.h
+HEADERS = MqttMgr.h linux-i2c.h SerialInterface.h I2CManager.h I2CSerialAdapter.h  KeypadDriver.h
 
 # Output binary
 OUTPUT = app

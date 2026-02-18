@@ -10,7 +10,7 @@
 #define SDA_PIN 0
 #define SCL_PIN 1
 
-#define NOTIFY_PIN 13
+#define NOTIFY_PIN 28
 
 #define SPI_PORT spi1
 #define MOSI_PIN 15
@@ -141,9 +141,9 @@ void matrix_scan(void) {
 int main() {
     stdio_init_all();
     // Wait for USB connection (optional but helpful for debugging)
-    while (!stdio_usb_connected()) {
-        sleep_ms(100);
-    }
+    // while (!stdio_usb_connected()) {
+    //     sleep_ms(100);
+    // }
     printf("USB Connected!\n");
     sleep_ms(1000); 
 
