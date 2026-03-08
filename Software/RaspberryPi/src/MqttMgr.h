@@ -5,7 +5,8 @@
 #include <string>
 #include <functional>
 
-class MqttMgr : public mqtt::callback {
+// Use virtual inheritance as per Paho C++ best practices for callbacks
+class MqttMgr : public virtual mqtt::callback {
 public:
     using message_handler = std::function<void(const std::string& topic, const std::string& payload)>;
 
@@ -31,6 +32,7 @@ public:
     void connected(const std::string& cause) override;
     void connection_lost(const std::string& cause) override;
     void message_arrived(mqtt::const_message_ptr msg) override;
+    void delivery_complete(mqtt::delivery_token_ptr token) override;
 
 private:
     mqtt::async_client client_;               // MQTT client instance
