@@ -1,13 +1,5 @@
 #include "CommandManager.h"
 
-// CommandManager::CommandManager(MqttMgr& mqtt, std::vector<ActuatorState>& states, ConfigData config)
-//     : mqtt_(mqtt), actuators_(states), config_(config) {
-//     for (auto const& [topic, idx] : config_.statusMap) {
-//         std::cout << "Subscribing to topic: " << topic << std::endl;
-//         mqtt_.subscribe(topic);
-//     }
-// }
-
 // 1. Clear out the constructor
 CommandManager::CommandManager(MqttMgr& mqtt, std::vector<ActuatorState>& states, ConfigData config)
     : mqtt_(mqtt), actuators_(states), config_(config) {
@@ -30,6 +22,8 @@ void CommandManager::handleEvent(const Event& e) {
         case Event::Type::MqttUpdate:
             handleMqtt(static_cast<const MqttEvent&>(e).topic(), 
                        static_cast<const MqttEvent&>(e).payload());
+            break;
+        default:
             break;
     }
 }

@@ -9,7 +9,9 @@
 
 class MultiHandler : public IEventHandler {
 public:
-    void addHandler(std::shared_ptr<IEventHandler> h) { handlers_.push_back(h); }
+    void addHandler(std::shared_ptr<IEventHandler> h) {
+        handlers_.push_back(h);
+    }
     void handleEvent(const Event& e) override {
         for (auto& h : handlers_) h->handleEvent(e);
     }
