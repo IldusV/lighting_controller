@@ -44,6 +44,7 @@ int main() {
         std::cerr << "Error opening I2C bus: " << e.what() << std::endl;
     }
     auto keypadBus = std::make_shared<I2CSerialAdapter>(i2cBus, 0x20);
+    auto displayBus = std::make_shared<I2CSerialAdapter>(i2cBus, 0x3c);
 
     // 1. Initialise Shared Data & Config
     auto config = TopicLoader::load("topics.txt");
@@ -57,7 +58,7 @@ int main() {
     auto cmdMgr = std::make_shared<CommandManager>(mqtt, actuators, config);
     auto logger = std::make_shared<LoggerHandler>(actuators, config);
 
-    auto displayCanvas = std::make_shared<U8G2Driver>();
+    auto displayCanvas = std::make_shared<U8G2Driver>(displayBus);
     auto displayRenderer = std::make_shared<DisplayRenderer>(displayCanvas);
     auto displayHandler = std::make_shared<DisplayHandler>(actuators, displayRenderer);
 

@@ -15,7 +15,7 @@ void DisplayRenderer::render(const std::vector<ActuatorState>& actuators, const 
               << " actuators and WiFi: " << sys.wifiConnected 
               << " MQTT: " << sys.mqttConnected << std::endl;
     // 1. Prepare the canvas
-    canvas_->clear();
+    //canvas_->clear();
 
     // 2. Draw Connectivity Chrome (Top Bar)
     // The Driver handles the actual theme-based icon placement

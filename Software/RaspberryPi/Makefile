@@ -8,7 +8,6 @@ LDFLAGS = -L/usr/local/lib -lpaho-mqttpp3 -lpaho-mqtt3as -lpigpio
 # Separate source files by type
 CPP_SRC =   src/main.cpp \
             src/MqttMgr.cpp \
-            src/linux-i2c.cpp \
             src/I2CManager.cpp \
             src/I2CSerialAdapter.cpp \
             src/KeypadDriver.cpp \
@@ -27,7 +26,6 @@ OBJ = $(CPP_SRC:.cpp=.o) $(C_SRC:.c=.o)
 
 # Header files
 HEADERS =   src/MqttMgr.h \
-            src/linux-i2c.h \
             src/SerialInterface.h \
             src/I2CManager.h \
             src/I2CSerialAdapter.h \
