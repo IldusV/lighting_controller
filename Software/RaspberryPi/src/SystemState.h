@@ -1,10 +1,17 @@
 #ifndef SYSTEM_STATE_H
 #define SYSTEM_STATE_H
 
+// #include "SystemEventQueue.h"
+
 #include <cstdint>
 #include <mutex>
+#include <functional>
+#include <iostream>
 
-enum class ConnectionStatus { DISCONNECTED = 0, CONNECTED = 1 };
+enum class ConnectionStatus {
+    DISCONNECTED = 0,
+    CONNECTED = 1 
+};
 
 struct ConnectionInfo {
     ConnectionStatus status = ConnectionStatus::DISCONNECTED;
@@ -25,7 +32,8 @@ public:
     SystemState(SystemState&&) = delete;
     SystemState& operator=(SystemState&&) = delete;
 
-    // WiFi getters
+    // using SystemStateCallback = std::function<void()>;
+
     ConnectionInfo getWiFiInfo() const {
         std::lock_guard<std::mutex> lock(mtx_);
         return wifi_;
@@ -41,14 +49,18 @@ public:
         return wifi_.signalLevel;
     }
 
-    // WiFi setters
     void setWiFiStatus(ConnectionStatus s, int8_t signal) {
-        std::lock_guard<std::mutex> lock(mtx_);
-        wifi_.status = s;
-        wifi_.signalLevel = signal;
+        {
+            std::lock_guard<std::mutex> lock(mtx_);
+            if (wifi_.status == s && wifi_.signalLevel == signal) {
+                return; // No change, don't trigger updates
+            }
+            wifi_ = {s, signal};
+            updated_ = true;
+        }
+        //SystemEventQueue::getInstance().push(SystemEventType::WIFI_UPDATED);
     }
 
-    // MQTT getters
     ConnectionInfo getMqttInfo() const {
         std::lock_guard<std::mutex> lock(mtx_);
         return mqtt_;
@@ -59,15 +71,31 @@ public:
         return mqtt_.status;
     }
 
-    // MQTT setters
     void setMqttStatus(ConnectionStatus s) {
         std::lock_guard<std::mutex> lock(mtx_);
         mqtt_.status = s;
     }
 
+    bool updated() const {
+        std::lock_guard<std::mutex> lock(mtx_);
+        return updated_;
+    }
+
+    void clearUpdated() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        updated_ = false;
+    }
+
+    // void setOnChange_cb(SystemStateCallback cb) {
+    //     onChange = cb;
+    // }
+
 private:
+    // SystemStateCallback onChange;
+
     // Private constructor - only called by getInstance()
     SystemState() = default;
+    bool updated_ = false;
     mutable std::mutex mtx_;
     ConnectionInfo wifi_{ConnectionStatus::DISCONNECTED, 0};
     ConnectionInfo mqtt_{ConnectionStatus::DISCONNECTED, 0};

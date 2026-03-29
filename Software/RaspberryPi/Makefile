@@ -17,7 +17,8 @@ CPP_SRC =   src/main.cpp \
             src/LoggerHandler.cpp \
             src/U8G2Driver.cpp \
             src/DisplayRenderer.cpp \
-            src/DisplayHandler.cpp
+            src/DisplayHandler.cpp \
+            src/WiFiWatcher.cpp
 
 C_SRC = $(wildcard lib/u8g2/csrc/*.c)
 
@@ -39,7 +40,9 @@ HEADERS =   src/MqttMgr.h \
             src/U8G2Driver.h \
             src/DisplayRenderer.h \
             src/DisplayHandler.h \
-            src/SystemState.h
+            src/SystemState.h \
+            src/WiFiWatcher.h \
+            src/SystemEventQueue.h
 
 # Output binary
 OUTPUT = app

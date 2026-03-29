@@ -19,7 +19,7 @@ void DisplayRenderer::render(const std::vector<ActuatorState>& actuators, const 
 
     // 2. Draw Connectivity Chrome (Top Bar)
     // The Driver handles the actual theme-based icon placement
-    //canvas_->drawWifiStatus(sys.wifiConnected, sys.wifiSignal);
+    canvas_->drawWifiStatus(sys.wifiConnected, sys.wifiSignal);
     //canvas_->drawMqttStatus(sys.mqttConnected);
 
     // 3. Draw Lighting Zones
@@ -36,11 +36,11 @@ void DisplayRenderer::render(const std::vector<ActuatorState>& actuators, const 
     }
 
     // 4. Draw Footer Logic
-    if (!sys.mqttConnected) {
-        canvas_->drawFooter("OFFLINE - CHECK BROKER");
-    } else {
-        canvas_->drawFooter("SYSTEM READY");
-    }
+    // if (!sys.mqttConnected) {
+    //     canvas_->drawFooter("OFFLINE - CHECK BROKER");
+    // } else {
+    //     canvas_->drawFooter("SYSTEM READY");
+    // }
 
     // 5. Push to hardware
     canvas_->update();

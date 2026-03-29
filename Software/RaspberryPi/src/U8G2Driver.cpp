@@ -181,7 +181,6 @@ void U8G2Driver::drawActuatorIcon(int slot, const std::string& iconName, bool ac
 
     auto bitmap = loadXBM(fullPath);
     u8g2_DrawXBM(&u8g2_, x, y, 48, 43, bitmap.data());
-
 }
 
 void U8G2Driver::getCoordinatesForSlot(int slot, int& x, int& y) {
@@ -192,10 +191,13 @@ void U8G2Driver::getCoordinatesForSlot(int slot, int& x, int& y) {
 
 void U8G2Driver::drawWifiStatus(bool connected, int signalLevel) {
     if (connected) {
-        // Draw bars icon based on signalLevel
-        u8g2_DrawBox(&u8g2_, 110, 0, 4, 8); 
-    } else {
-        u8g2_DrawLine(&u8g2_, 110, 0, 114, 8); // 'X' for disconnected
+        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: ON");
+        u8g2_DrawStr(&u8g2_, 50, 62, ("Signal: " + std::to_string(signalLevel)).c_str());
+    }
+    else {
+        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: OFF");
     }
 }
 
