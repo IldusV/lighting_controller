@@ -96,6 +96,16 @@ int main() {
                   << " with payload: " << p << std::endl;
     });
 
+    mqtt.set_connection_callback([&](bool connected) {
+        if (connected) {
+            std::cout << "MQTT Connected callback: Connected to broker" << std::endl;
+            SystemState::getInstance().setMqttStatus(ConnectionStatus::CONNECTED);
+        } else {
+            std::cout << "MQTT Connected callback: Disconnected from broker" << std::endl;
+            SystemState::getInstance().setMqttStatus(ConnectionStatus::DISCONNECTED);
+        }
+    });
+
     mqtt.connect();
     cmdMgr->subscribeAll();
     keypad.start();

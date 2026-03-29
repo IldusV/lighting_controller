@@ -1,11 +1,10 @@
 #include "WiFiWatcher.h"
-#include <sys/resource.h>
 
+#include <sys/resource.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <chrono>
-#include <iostream>
 
 WiFiWatcher::WiFiWatcher(WiFiStatusCallback callback) : callback_(callback) {}
 

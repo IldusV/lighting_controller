@@ -20,7 +20,7 @@ void DisplayRenderer::render(const std::vector<ActuatorState>& actuators, const 
     // 2. Draw Connectivity Chrome (Top Bar)
     // The Driver handles the actual theme-based icon placement
     canvas_->drawWifiStatus(sys.wifiConnected, sys.wifiSignal);
-    //canvas_->drawMqttStatus(sys.mqttConnected);
+    canvas_->drawMqttStatus(sys.mqttConnected);
 
     // 3. Draw Lighting Zones
     // We iterate through the provided vector. The Renderer decides 

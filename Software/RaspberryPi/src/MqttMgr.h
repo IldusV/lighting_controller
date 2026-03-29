@@ -9,6 +9,7 @@
 class MqttMgr : public virtual mqtt::callback {
 public:
     using message_handler = std::function<void(const std::string& topic, const std::string& payload)>;
+    using connection_handler = std::function<void(bool connected)>;
 
     // Constructor
     MqttMgr(const std::string& broker_address, const std::string& client_id);
@@ -28,6 +29,9 @@ public:
     // Sets the callback to handle incoming messages
     void set_message_callback(message_handler cb);
 
+    // Sets the callback to handle connection status changes
+    void set_connection_callback(connection_handler cb);
+
     // Override callback methods from mqtt::callback
     void connected(const std::string& cause) override;
     void connection_lost(const std::string& cause) override;
@@ -37,6 +41,7 @@ public:
 private:
     mqtt::async_client client_;               // MQTT client instance
     message_handler message_callback_;        // Callback for handling received messages
+    connection_handler connection_callback_;  // Callback for handling connection status changes
 };
 
 #endif // MQTT_MGR_H

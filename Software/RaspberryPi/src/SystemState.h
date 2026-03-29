@@ -58,7 +58,6 @@ public:
             wifi_ = {s, signal};
             updated_ = true;
         }
-        //SystemEventQueue::getInstance().push(SystemEventType::WIFI_UPDATED);
     }
 
     ConnectionInfo getMqttInfo() const {
@@ -73,7 +72,11 @@ public:
 
     void setMqttStatus(ConnectionStatus s) {
         std::lock_guard<std::mutex> lock(mtx_);
+        if (mqtt_.status == s) {
+            return;
+        }
         mqtt_.status = s;
+        updated_ = true;
     }
 
     bool updated() const {

@@ -106,8 +106,6 @@ U8G2Driver::U8G2Driver(std::shared_ptr<I2CSerialAdapter> adapter) : adapter_(ada
 U8G2Driver::~U8G2Driver() {}
 
 void U8G2Driver::init() {
-    // u8g2_Setup_st75256_i2c_jlx25664_f(&u8g2_, U8G2_R0, u8x8_byte_linux_i2c, u8x8_linux_i2c_delay);
-
     u8g2_SetI2CAddress(&u8g2_, 0x3c);
     u8g2_InitDisplay(&u8g2_);
     u8g2_SetPowerSave(&u8g2_, 0);
@@ -131,44 +129,37 @@ void U8G2Driver::setTheme(const ThemeConfig& config) {
 
 std::vector<unsigned char> loadXBM(const std::string& filename) {
     std::ifstream file(filename);
-    if (!file) {
-        std::cerr << "[ERROR] Failed to open: " << filename << std::endl;
-        throw std::runtime_error("Cannot open XBM file: " + filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening XBM file: " << filename << std::endl;
+        return {}; // Return empty instead of throwing to avoid crashing the UI thread
     }
 
+    std::string content((std::istreambuf_iterator<char>(file)),
+                         std::istreambuf_iterator<char>());
+    
+    // 1. Find the data between { and }
+    size_t start = content.find('{');
+    size_t end = content.find('}', start);
+    if (start == std::string::npos || end == std::string::npos) return {};
+
+    std::string dataBlock = content.substr(start + 1, end - start - 1);
     std::vector<unsigned char> data;
-    std::string line;
-    bool dataStarted = false;
-
-    while (std::getline(file, line)) {
-        // Find the start of the actual hex data after the '{'
-        if (!dataStarted) {
-            if (line.find('{') != std::string::npos) {
-                dataStarted = true;
-                continue;
-            }
-            continue;
-        }
-
-        // Stop if we hit the end of the array '};'
-        if (line.find('}') != std::string::npos) break;
-
-        // Clean up formatting characters (commas, semicolons)
-        std::replace(line.begin(), line.end(), ',', ' ');
-        std::replace(line.begin(), line.end(), ';', ' ');
-
-        std::stringstream ss(line);
-        std::string hexStr;
-        while (ss >> hexStr) {
+    
+    // 2. Use a more surgical approach to find 0x hex values
+    size_t pos = 0;
+    while ((pos = dataBlock.find("0x", pos)) != std::string::npos) {
+        // Grab the next 4 characters (e.g., "0xFF")
+        if (pos + 3 < dataBlock.size()) {
+            std::string hexStr = dataBlock.substr(pos, 4);
             try {
-                // Convert "0xFF" text to the actual byte 255
-                unsigned char byte = static_cast<unsigned char>(std::stoul(hexStr, nullptr, 16));
-                data.push_back(byte);
+                data.push_back(static_cast<unsigned char>(std::stoul(hexStr, nullptr, 16)));
             } catch (...) {
-                continue; // Skip things that aren't hex (like 'char' or 'static')
+                // Ignore malformed hex
             }
         }
+        pos += 2; // Move past the "0x" to find the next one
     }
+    
     return data;
 }
 
@@ -185,24 +176,52 @@ void U8G2Driver::drawActuatorIcon(int slot, const std::string& iconName, bool ac
 
 void U8G2Driver::getCoordinatesForSlot(int slot, int& x, int& y) {
     // Layout logic: linear left to right with 18 pixel offset
-    x = slot * 50+3;
-    y = 9;
+    x = slot * 50 + 3;
+    y = 64 - 43;
 }
 
 void U8G2Driver::drawWifiStatus(bool connected, int signalLevel) {
     if (connected) {
-        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
-        u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: ON");
-        u8g2_DrawStr(&u8g2_, 50, 62, ("Signal: " + std::to_string(signalLevel)).c_str());
+        // u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        // u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: ON");
+        // u8g2_DrawStr(&u8g2_, 50, 62, ("Signal:    "));
+        // u8g2_DrawStr(&u8g2_, 50, 62, ("Signal: " + std::to_string(signalLevel)).c_str());
+        
+        std::string fullPath = currentTheme_.baseDir + "/wifi_10x9_3" +  ".xbm";
+        auto bitmap = loadXBM(fullPath);
+        if (bitmap.size() >= 8) {
+            u8g2_DrawXBM(&u8g2_, 256-10-5 , 8, 10, 9, bitmap.data());
+        } else {
+            std::cerr << "Display Error: Bitmap too small or load failed! Size: " << bitmap.size() << std::endl;
+        }
+        // fullPath = currentTheme_.baseDir + "/wifi_9x9_2" +  ".xbm";
+        // bitmap = loadXBM(fullPath);
+        // u8g2_DrawXBM(&u8g2_, 160, 0, 9, 9, bitmap.data());
+        // fullPath = currentTheme_.baseDir + "/wifi_9x9_1" +  ".xbm";
+        // bitmap = loadXBM(fullPath);
+        // u8g2_DrawXBM(&u8g2_, 180, 0, 9, 9, bitmap.data());
     }
     else {
-        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
-        u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: OFF");
+        // u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        // u8g2_DrawStr(&u8g2_, 0, 62, "WiFi: OFF");
+        std::string fullPath = currentTheme_.baseDir + "/wifi_9x9_0" +  ".xbm";
+        auto bitmap = loadXBM(fullPath);
+        u8g2_DrawXBM(&u8g2_, 256-10-5, 8, 9, 9, bitmap.data());
+        
     }
 }
 
 void U8G2Driver::drawMqttStatus(bool connected) {
-    if (connected) u8g2_DrawDisc(&u8g2_, 100, 4, 2, U8G2_DRAW_ALL);
+    if (connected)
+    {
+        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        u8g2_DrawStr(&u8g2_, 256-15-25, 17, "MQTT");
+    }
+    else
+    {
+        u8g2_SetFont(&u8g2_, u8g2_font_5x7_tr);
+        u8g2_DrawStr(&u8g2_, 256-15-25, 17, "XXXX");
+    }
 }
 
 void U8G2Driver::drawFooter(const std::string& text) {
