@@ -12,7 +12,7 @@
 #include "DisplayHandler.h"
 #include "U8G2Driver.h"
 #include "SystemState.h"
-// #include "SystemEventQueue.h"
+#include "MqttEventQueue.h"
 #include "WiFiWatcher.h"
 
 #include <unistd.h>
@@ -79,21 +79,9 @@ int main() {
     dispatcher->addHandler(logger);
     dispatcher->addHandler(displayHandler);
 
-    // sysState.setOnChange_cb([&]() {
-    //     dispatcher->handleEvent(SystemUpdateEvent());
-    //     std::cout << "System state changed, dispatched SystemUpdateEvent" << std::endl;
-    // });
-    
     KeypadDriver keypad(keypadBus, 4, [&](uint8_t code) {
         dispatcher->handleEvent(ButtonEvent(code));
         std::cout << ">> Client received key: 0x" << std::hex << (int)code << std::endl;
-    });
-
-    // this causing screen glitch, it needs to be queued
-    mqtt.set_message_callback([&](const std::string& t, const std::string& p) {
-        dispatcher->handleEvent(MqttEvent(t, p));
-        std::cout << "Received message on topic: " << t
-                  << " with payload: " << p << std::endl;
     });
 
     mqtt.set_connection_callback([&](bool connected) {
@@ -106,6 +94,11 @@ int main() {
         }
     });
 
+    mqtt.set_message_callback([&](const std::string& t, const std::string& p) {
+        MqttEventQueue::getInstance().push(MqttEvent(t, p));
+        std::cout << "Pushed MQTT event to the queue, topic: " << t << " with payload: " << p << std::endl;
+    });
+
     mqtt.connect();
     cmdMgr->subscribeAll();
     keypad.start();
@@ -113,15 +106,8 @@ int main() {
 
     while(1)
     {
+        MqttEventQueue::getInstance().wait_for_data(1000);
         std::cout << "main thread..." << std::endl;
-
-        // SystemEventType event;
-        // while (SystemEventQueue::getInstance().pop(event)) {
-        //     if (event == SystemEventType::WIFI_UPDATED) {
-        //         dispatcher->handleEvent(SystemUpdateEvent());
-        //         std::cout << "Processed WIFI_UPDATED event" << std::endl;
-        //     }
-        // }
 
         if (sysState.updated()) {
             dispatcher->handleEvent(SystemUpdateEvent());
@@ -129,7 +115,13 @@ int main() {
             sysState.clearUpdated();
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Adjust sleep time as needed
+        MqttEvent mqttEvent("", "");
+        while (MqttEventQueue::getInstance().pop(mqttEvent)) {
+            dispatcher->handleEvent(mqttEvent);
+            std::cout << "Processed MQTT event from queue, topic: " << mqttEvent.topic() << std::endl;
+        }
+        
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Adjust sleep time as needed
         // keypad->sendLEDCommand(0xFF); // Example: Send a command to turn on LEDs
     }
 

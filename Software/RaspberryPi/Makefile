@@ -42,7 +42,8 @@ HEADERS =   src/MqttMgr.h \
             src/DisplayHandler.h \
             src/SystemState.h \
             src/WiFiWatcher.h \
-            src/SystemEventQueue.h
+            src/SystemEventQueue.h \
+            src/MqttEventQueue.h
 
 # Output binary
 OUTPUT = app
