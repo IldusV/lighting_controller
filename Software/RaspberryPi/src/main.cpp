@@ -14,23 +14,24 @@
 #include "SystemState.h"
 #include "MqttEventQueue.h"
 #include "WiFiWatcher.h"
+#include "ButtonEventQueue.h"
 
 #include <unistd.h>
 #include <iostream>
 #include <stdio.h>
 
-void on_keypad_msg_received(unsigned char* payload, size_t size) {
-    std::cout << "Payload received: ";
-    for (size_t i = 0; i < size; ++i) {
-        std::cout << std::hex << static_cast<int>(payload[i]) << " ";
-    }
-    std::cout << std::endl;
-}
+// void on_keypad_msg_received(unsigned char* payload, size_t size) {
+//     std::cout << "Payload received: ";
+//     for (size_t i = 0; i < size; ++i) {
+//         std::cout << std::hex << static_cast<int>(payload[i]) << " ";
+//     }
+//     std::cout << std::endl;
+// }
 
-void on_mqtt_msg_received(const std::string& topic, const std::string& payload) {
-    std::cout << "Received message on topic: " << topic
-              << " with payload: " << payload << std::endl;
-}
+// void on_mqtt_msg_received(const std::string& topic, const std::string& payload) {
+//     std::cout << "Received message on topic: " << topic
+//               << " with payload: " << payload << std::endl;
+// }
 
 int main() {
     const std::string broker_address = "tcp://127.0.0.1:1883";
@@ -66,7 +67,7 @@ int main() {
     std::vector<ActuatorState> actuators(5); // Scalable to any size
 
     MqttMgr mqtt(broker_address, client_id);
-    
+
     auto dispatcher = std::make_shared<MultiHandler>();
     auto cmdMgr = std::make_shared<CommandManager>(mqtt, actuators, config);
     auto logger = std::make_shared<LoggerHandler>(actuators, config);
@@ -80,8 +81,8 @@ int main() {
     dispatcher->addHandler(displayHandler);
 
     KeypadDriver keypad(keypadBus, 4, [&](uint8_t code) {
-        dispatcher->handleEvent(ButtonEvent(code));
-        std::cout << ">> Client received key: 0x" << std::hex << (int)code << std::endl;
+        ButtonEventQueue::getInstance().push(ButtonEvent(code));
+        std::cout << "Pushed Button event to the queue, code: 0x" << std::hex << (int)code << std::endl;
     });
 
     mqtt.set_connection_callback([&](bool connected) {
@@ -121,6 +122,12 @@ int main() {
             std::cout << "Processed MQTT event from queue, topic: " << mqttEvent.topic() << std::endl;
         }
         
+        ButtonEvent buttonEvent(0);
+        while (ButtonEventQueue::getInstance().pop(buttonEvent)) {
+            dispatcher->handleEvent(buttonEvent);
+            std::cout << "Processed Button event from queue, code: 0x" << std::hex << (int)buttonEvent.getCode() << std::endl;
+        }
+
         //std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Adjust sleep time as needed
         // keypad->sendLEDCommand(0xFF); // Example: Send a command to turn on LEDs
     }

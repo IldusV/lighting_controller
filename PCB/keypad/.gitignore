@@ -6,6 +6,7 @@
 *.ses
 *.dsn
 *.rules
+*.lck
 
 # KiCad caches
 fp-info-cache
