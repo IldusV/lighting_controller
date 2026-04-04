@@ -1,0 +1,31 @@
+# ============================================================
+# PROJECT APP1 CONFIGURATION
+# FORMAT: TYPE : ID : ACTION/NAME : MQTT_TOPIC
+# ============================================================
+
+# --- COMMANDS (Keypad Press -> MQTT Publish) ---
+# Button 0:
+CMD  : 0 : TOGGLE      : home/room/light0/set
+
+# Button 1:
+CMD  : 1 : TOGGLE      : home/room/light1/set
+
+# Button 2:
+CMD  : 2 : TOGGLE      : home/room/light2/set
+
+# Button 3:
+CMD  : 3 : TOGGLE      : home/room/light3/set
+
+# Button 4:
+CMD  : 4 : TOGGLE      : home/room/light4/set
+
+# --- STATUS (MQTT Message -> Update ActuatorState[ID]) ---
+STAT : 0 : ROOM_LT : home/room/light0/status
+
+STAT : 1 : ROOM_LT : home/room/light1/status
+
+STAT : 2 : ROOM_LT : home/room/light2/status
+
+STAT : 3 : ROOM_LT : home/room/light3/status
+
+STAT : 4 : ROOM_LT : home/room/light4/status

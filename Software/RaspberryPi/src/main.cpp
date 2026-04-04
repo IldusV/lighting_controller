@@ -107,7 +107,7 @@ int main() {
 
     while(1)
     {
-        MqttEventQueue::getInstance().wait_for_data(1000);
+        //MqttEventQueue::getInstance().wait_for_data(1000);
         std::cout << "main thread..." << std::endl;
 
         if (sysState.updated()) {
@@ -121,14 +121,14 @@ int main() {
             dispatcher->handleEvent(mqttEvent);
             std::cout << "Processed MQTT event from queue, topic: " << mqttEvent.topic() << std::endl;
         }
-        
+
         ButtonEvent buttonEvent(0);
         while (ButtonEventQueue::getInstance().pop(buttonEvent)) {
             dispatcher->handleEvent(buttonEvent);
             std::cout << "Processed Button event from queue, code: 0x" << std::hex << (int)buttonEvent.getCode() << std::endl;
         }
 
-        //std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // Adjust sleep time as needed
+        std::this_thread::sleep_for(std::chrono::milliseconds(300)); // Adjust sleep time as needed
         // keypad->sendLEDCommand(0xFF); // Example: Send a command to turn on LEDs
     }
 
