@@ -37,9 +37,14 @@ void KeypadDriver::stop() {
     gpioSetAlertFunc(gpioPin_, nullptr); // Unregister
 }
 
-void KeypadDriver::sendLEDCommand(uint8_t data) {
+void KeypadDriver::sendLEDCommand(LedCommand ledCmd) {
     if (bus_) {
-        bus_->send(&data, 1);
+        std::array<uint8_t, 2> buf = {
+            static_cast<uint8_t>(ledCmd.value & 0xFF),
+            static_cast<uint8_t>(ledCmd.value >> 8)
+        };
+
+        bus_->send(buf.data(), buf.size());
     }
 }
 

@@ -33,6 +33,8 @@
 //               << " with payload: " << payload << std::endl;
 // }
 
+#define ACTUATOR_COUNT 5
+
 int main() {
     const std::string broker_address = "tcp://127.0.0.1:1883";
     const std::string client_id = "paho_client";
@@ -64,7 +66,8 @@ int main() {
 
     auto config = TopicLoader::load("topics.txt");
 
-    std::vector<ActuatorState> actuators(5); // Scalable to any size
+    std::vector<ActuatorState> actuators(ACTUATOR_COUNT);
+    actuators[0].setSelected(true); // By default select the first actuator
 
     MqttMgr mqtt(broker_address, client_id);
 
@@ -105,6 +108,9 @@ int main() {
     keypad.start();
     wifiWatcher->start();
 
+    KeypadDriver::LedCommand ledCmd = {0};
+    KeypadDriver::LedCommand prevLedCmd = {0};
+
     while(1)
     {
         //MqttEventQueue::getInstance().wait_for_data(1000);
@@ -122,6 +128,26 @@ int main() {
             std::cout << "Processed MQTT event from queue, topic: " << mqttEvent.topic() << std::endl;
         }
 
+        size_t i = 0;
+        ledCmd.value = 0;
+        for (auto &actuator : actuators) {
+            auto data = actuator.getData();
+
+            if (data.state == PowerState::ON) {
+                ledCmd.value |= (1u << i);
+            }
+
+            if (actuator.isSelected()) {
+                ledCmd.value |= (1u << (i + 10));
+            }
+            i++;
+        }
+        if (ledCmd.value != prevLedCmd.value) {
+            prevLedCmd = ledCmd;
+            std::cout << "Sending LED command: 0x" << std::hex << ledCmd.value << std::dec << std::endl;
+            keypad.sendLEDCommand(ledCmd);
+        }
+
         ButtonEvent buttonEvent(0);
         while (ButtonEventQueue::getInstance().pop(buttonEvent)) {
             dispatcher->handleEvent(buttonEvent);
@@ -129,7 +155,6 @@ int main() {
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(300)); // Adjust sleep time as needed
-        // keypad->sendLEDCommand(0xFF); // Example: Send a command to turn on LEDs
     }
 
     return 0;

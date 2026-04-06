@@ -15,14 +15,17 @@ class KeypadDriver {
 public:
     using KeyCallback = std::function<void(uint8_t)>;
 
+    struct LedCommand {
+        uint16_t value;
+    };
+
     KeypadDriver(std::shared_ptr<SerialInterface> bus, int gpioPin, KeyCallback cb);
     ~KeypadDriver();
 
     void start();
     void stop();
     
-    // API to send data (e.g., control LEDs)
-    void sendLEDCommand(uint8_t data);
+    void sendLEDCommand(LedCommand data);
 
 private:
     void run();

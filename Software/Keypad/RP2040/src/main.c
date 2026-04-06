@@ -55,6 +55,10 @@ void send_data(uint8_t data1, uint8_t data2) {
     sleep_ms(1);  // Small delay to allow time for the output to stabilize
 }
 
+volatile uint8_t rx_buffer[2];
+volatile uint8_t rx_index = 0;
+volatile bool command_ready = false;
+
 void i2c_slave_handler(void) {
     i2c_hw_t *hw = i2c_get_hw(I2C_PORT);
     uint32_t intr_stat = hw->intr_stat;
@@ -76,15 +80,19 @@ void i2c_slave_handler(void) {
 
     // --- CASE 2: MASTER WRITING TO PICO ---
     if (intr_stat & I2C_IC_INTR_STAT_R_RX_FULL_BITS) {
-        // Read the byte sent by the Master
-        uint8_t received_byte = (uint8_t)hw->data_cmd;
-        
-        // Example logic: Do something with the received data
-        // If you receive 2 bytes, this block will fire twice.
-        printf("Received from Pi: 0x%02X\n", received_byte);
+
+        while (hw->rxflr) {  // <-- IMPORTANT: drain FIFO
+            uint8_t byte = (uint8_t)hw->data_cmd;
+
+            rx_buffer[rx_index++] = byte;
+
+            if (rx_index == 2) {
+                command_ready = true;
+                rx_index = 0;  // reset for next message
+            }
+        }
     }
 }
-
 
 void matrix_init(void)
 {
@@ -177,9 +185,7 @@ int main() {
     irq_set_exclusive_handler(I2C0_IRQ, i2c_slave_handler);
     
     // CRITICAL: Set the mask FIRST, then enable the IRQ
-    i2c_get_hw(I2C_PORT)->intr_mask = (I2C_IC_INTR_MASK_M_RD_REQ_BITS | 
-                                       I2C_IC_INTR_MASK_M_STOP_DET_BITS |
-                                    I2C_IC_INTR_MASK_M_RX_FULL_BITS);
+    i2c_get_hw(I2C_PORT)->intr_mask = (I2C_IC_INTR_MASK_M_RD_REQ_BITS | I2C_IC_INTR_MASK_M_STOP_DET_BITS | I2C_IC_INTR_MASK_M_RX_FULL_BITS);
     
     irq_set_enabled(I2C0_IRQ, true);
 
@@ -193,25 +199,33 @@ int main() {
         matrix_scan();
         sleep_ms(1);
 
-        if(incr == 100)
-        {
-            //while (1) {
-                send_data((uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF));  // Example: Send two bytes to control LEDs (all LEDs on for the first byte)
+        if (command_ready) {
+            command_ready = false;
 
-                //sleep_ms(50);
+            send_data(rx_buffer[1], rx_buffer[0]); 
 
-                if (flag)
-                    value = value << 1;
-                else
-                    value = value >> 1;
-
-                if (value == 0x4000 || value == 0x0001) {
-                    flag = !flag;
-                }
-            //}
-            incr = 0;
+            printf("Received 2-byte cmd: 0x%04X\n", (rx_buffer[1] << 8) | rx_buffer[0]);
         }
-        incr++;
+
+        // if(incr == 100)
+        // {
+        //     //while (1) {
+        //         send_data((uint8_t)((value >> 8) & 0xFF), (uint8_t)(value & 0xFF));  // Example: Send two bytes to control LEDs (all LEDs on for the first byte)
+
+        //         //sleep_ms(50);
+
+        //         if (flag)
+        //             value = value << 1;
+        //         else
+        //             value = value >> 1;
+
+        //         if (value == 0x4000 || value == 0x0001) {
+        //             flag = !flag;
+        //         }
+        //     //}
+        //     incr = 0;
+        // }
+        // incr++;
         
     }
 
